@@ -23,7 +23,10 @@ router.post('/submit', function(req, res, next) {
 });
 
 router.get('/results', function(req, res, next) {
-  res.render('results', { title: 'test' });
+  res.render('results', { 
+    title: 'test',
+    config: config
+  });
 });
 
 module.exports = router;
