@@ -1,6 +1,6 @@
 // models/Survey.js
 const mongoose = require('mongoose');
-const constants = require('../constants/surveyConstants');
+const constants = require('../config/config');
 
 // 从 constants 中提取枚举值
 const ageGroups = Object.keys(constants.AGE_GROUPS);
@@ -223,9 +223,8 @@ surveySchema.statics.getDietDistribution = async function() {
 };
 
 // 中间件：保存前日志
-surveySchema.pre('save', function(next) {
-    console.log(`Saving survey for age group: ${this.age_group}, gender: ${this.gender}`);
-    next();
+surveySchema.pre('save', async() => {
+    console.log(`Saving survey... ...`);
 });
 
 // 中间件：保存后日志
