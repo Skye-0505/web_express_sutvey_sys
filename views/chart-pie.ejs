@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dietary Patterns - Health Survey</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- amCharts 5 -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <!-- Custom CSS -->
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/chart-pie.css' />
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-heartbeat me-2"></i>
+        <%= config.NAV_BRAND %>
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a href="/results" class="btn btn-outline-light me-2">
+          <i class="fas fa-chart-line me-2"></i>Back to Results
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="display-5 fw-bold text-primary">
+          <i class="fas fa-chart-pie me-3"></i>
+          Dietary Patterns Analysis
+        </h1>
+        <p class="lead text-muted">
+          Distribution of dietary preferences among participants
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="stats-card">
+          <h6>Total Participants</h6>
+          <h2>
+            <%= db.stats.totalParticipants.toLocaleString() %>
+          </h2>
+          <small>All diet types</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);">
+          <h6>Plant-Based</h6>
+          <h2>
+            <%= db.stats.vegetarianPercentage %>%
+          </h2>
+          <small>Vegetarian & Vegan</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #ffd43b 0%, #f59f00 100%);">
+          <h6>Most Popular</h6>
+          <h2>
+            <%= db.dietLabels[db.stats.mostPopularDiet] || db.stats.mostPopularDiet %>
+          </h2>
+          <small>
+            <%= db.stats.mostPopularPercentage %>% of participants
+          </small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #9775fa 0%, #7048e8 100%);">
+          <h6>Avg Health Score</h6>
+          <h2>
+            <%= db.stats.avgHealthScore %>
+          </h2>
+          <small>Across all diets</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0">
+          <i class="fas fa-chart-pie me-2 text-primary"></i>
+          Diet Type Distribution
+        </h5>
+      </div>
+      <div class="card-body">
+        <% if (db.chartData && db.chartData.length> 0) { %>
+          <div id="chartdiv"></div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No Data Available</h5>
+              <p class="text-muted">--</p>
+            </div>
+            <% } %>
+      </div>
+    </div>
+
+    <!-- Diet Type Details  -->
+    <div class="card mt-4 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-table me-2 text-primary"></i>
+          Diet Type Details
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="d-none d-md-block">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Diet Type</th>
+                  <th>Participants</th>
+                  <th>Percentage</th>
+                  <th>Avg Health Score</th>
+                  <th>Avg Water Intake</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (db.chartData && db.chartData.length> 0) { %>
+                  <% db.chartData.forEach(item=> { %>
+                    <tr>
+                      <td>
+                        <span class="diet-badge"
+                          style="background-color: <%= db.dietColors[item.type]?.color || '#ccc' %>;"></span>
+                        <%= db.dietLabels[item.type] || item.type %>
+                          <span class="ms-2">
+                            <%= db.dietColors[item.type]?.icon || '' %>
+                          </span>
+                      </td>
+                      <td>
+                        <%= item.count %>
+                      </td>
+                      <td>
+                        <div class="progress" style="height: 20px; width: 150px;">
+                          <div class="progress-bar"
+                            style="width: <%= item.percentage %>%; background-color: <%= db.dietColors[item.type]?.color || '#0d6efd' %>;">
+                            <%= item.percentage %>%
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          class="badge bg-<%= db.healthByDiet[item.type]?.avgHealthScore >= 4 ? 'success' : (db.healthByDiet[item.type]?.avgHealthScore >= 3 ? 'warning' : 'danger') %>">
+                          <%= db.healthByDiet[item.type]?.avgHealthScore || 'N/A' %>
+                        </span>
+                      </td>
+                      <td>
+                        <%= db.healthByDiet[item.type]?.avgWaterIntake || 'N/A' %> cups
+                      </td>
+                    </tr>
+                    <% }); %>
+                      <% } else { %>
+                        <tr>
+                          <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-database me-2"></i>
+                            No data available --
+                          </td>
+                        </tr>
+                        <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="d-md-none">
+          <% if (db.chartData && db.chartData.length> 0) { %>
+            <div class="row g-3">
+              <% db.chartData.forEach(item=> { %>
+                <div class="col-12">
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="diet-badge"
+                          style="background-color: <%= db.dietColors[item.type]?.color || '#ccc' %>; width: 16px; height: 16px;"></span>
+                        <h6 class="mb-0 ms-2 fw-bold">
+                          <%= db.dietLabels[item.type] || item.type %>
+                            <span class="ms-2">
+                              <%= db.dietColors[item.type]?.icon || '' %>
+                            </span>
+                        </h6>
+                      </div>
+
+                      <div class="row g-2 mt-2">
+                        <div class="col-6">
+                          <small class="text-muted d-block">Participants</small>
+                          <strong>
+                            <%= item.count %>
+                          </strong>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">Percentage</small>
+                          <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                              <div class="progress-bar"
+                                style="width: <%= item.percentage %>%; background-color: <%= db.dietColors[item.type]?.color || '#0d6efd' %>;">
+                              </div>
+                            </div>
+                            <span class="ms-2 small">
+                              <%= item.percentage %>%
+                            </span>
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">Health Score</small>
+                          <span
+                            class="badge bg-<%= db.healthByDiet[item.type]?.avgHealthScore >= 4 ? 'success' : (db.healthByDiet[item.type]?.avgHealthScore >= 3 ? 'warning' : 'danger') %>">
+                            <%= db.healthByDiet[item.type]?.avgHealthScore || 'N/A' %>
+                          </span>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">Water Intake</small>
+                          <strong>
+                            <%= db.healthByDiet[item.type]?.avgWaterIntake || 'N/A' %> cups
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <% }); %>
+            </div>
+            <% } else { %>
+              <div class="text-center text-muted py-4">
+                <i class="fas fa-database me-2"></i>
+                No data available --
+              </div>
+              <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Insights -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <i class="fas fa-heart me-2 text-danger"></i>
+              Health Score by Diet
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="healthChart" width="400" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <i class="fas fa-lightbulb me-2 text-warning"></i>
+              Key Insights
+            </h5>
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% const veganHealth=parseFloat(db.healthByDiet.vegan?.avgHealthScore) || 0; const
+                omnivoreHealth=parseFloat(db.healthByDiet.omnivore?.avgHealthScore) || 0; const healthDiff=(veganHealth
+                - omnivoreHealth).toFixed(1); const ketoWater=parseFloat(db.healthByDiet.keto?.avgWaterIntake) || 0;
+                const vegWater=parseFloat(db.healthByDiet.vegetarian?.avgWaterIntake) || 0; %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>🌱 Plant-based diets have <strong>
+                      <%= healthDiff> 0 ? healthDiff : '0' %> points
+                    </strong> higher health score</span>
+                  <span class="badge bg-success rounded-pill">+</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>🥑 Keto diet followers drink <strong>
+                      <%= (vegWater - ketoWater).toFixed(1) %> cups
+                    </strong> less water</span>
+                  <span class="badge bg-warning rounded-pill">!</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>🥬 Vegetarians have the highest water intake (<%= vegWater %> cups)</span>
+                  <span class="badge bg-info rounded-pill">💧</span>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+      <a href="/results" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Results
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-light py-4 mt-5">
+    <div class="container text-center">
+      <p class="text-muted mb-0">
+        <i class="fas fa-heart text-danger me-2"></i>
+        Data visualized from health survey responses
+      </p>
+    </div>
+  </footer>
+
+  <div id="chart-data" data-chart='<%- JSON.stringify(db.chartData) %>'
+    data-labels='<%- JSON.stringify(db.dietLabels) %>' data-colors='<%- JSON.stringify(db.dietColors) %>'
+    data-health='<%- JSON.stringify(db.healthByDiet) %>' style="display: none;">
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Chart.js for secondary chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- amCharts Script -->
+  <% if (db.chartData && db.chartData.length> 0) { %>
+    <script>
+      (function () {
+        const chartData = JSON.parse(document.getElementById('chart-data').dataset.chart);
+        const dietLabels = JSON.parse(document.getElementById('chart-data').dataset.labels);
+        const dietColors = JSON.parse(document.getElementById('chart-data').dataset.colors);
+        const healthByDiet = JSON.parse(document.getElementById('chart-data').dataset.health);
+
+        let currentRoot = null;
+
+        function disposeChart() {
+          if (currentRoot) {
+            try {
+              currentRoot.dispose();
+            } catch (e) {
+              console.log('Dispose error:',e);
+            }
+            currentRoot = null;
+          }
+        }
+
+        function createPieChart() {
+          disposeChart();
+
+          const chartDiv = document.getElementById('chartdiv');
+          if (!chartDiv) return;
+
+          chartDiv.innerHTML = '';
+
+          const isMobile = window.innerWidth < 768;
+
+          var root = am5.Root.new("chartdiv");
+          currentRoot = root;
+
+          root.setThemes([
+            am5themes_Animated.new(root)
+          ]);
+
+          var chart = root.container.children.push(am5percent.PieChart.new(root,{
+            layout: root.verticalLayout,
+            innerRadius: am5.percent(50)
+          }));
+
+          var series = chart.series.push(am5percent.PieSeries.new(root,{
+            name: "Diet",
+            valueField: "count",
+            categoryField: "type",
+            alignLabels: true
+          }));
+
+          series.get("colors").set("colors",[
+            am5.color(dietColors.omnivore?.color || '#ff6b6b'),
+            am5.color(dietColors.vegetarian?.color || '#51cf66'),
+            am5.color(dietColors.vegan?.color || '#94d82d'),
+            am5.color(dietColors.keto?.color || '#ffd43b')
+          ]);
+
+          series.data.setAll(chartData);
+
+          series.slices.template.set("tooltipText","{category}: {value} ({value.percent}%)");
+
+          var legend = chart.children.push(am5.Legend.new(root,{
+            centerX: am5.p50,
+            x: am5.p50,
+            layout: isMobile ? root.verticalLayout : root.horizontalLayout,
+            marginTop: 20
+          }));
+
+          if (isMobile) {
+            legend.labels.template.setAll({
+              fontSize: 12
+            });
+          }
+
+          legend.data.setAll(series.dataItems);
+
+          series.appear(1000,100);
+        }
+
+        function createHealthChart() {
+          const ctx = document.getElementById('healthChart').getContext('2d');
+
+          const dietTypes = Object.keys(healthByDiet);
+          const healthScores = dietTypes.map(type => parseFloat(healthByDiet[type]?.avgHealthScore) || 0);
+          const colors = dietTypes.map(type => dietColors[type]?.color || '#ccc');
+
+          new Chart(ctx,{
+            type: 'bar',
+            data: {
+              labels: dietTypes.map(type => dietLabels[type] || type),
+              datasets: [{
+                label: 'Average Health Score',
+                data: healthScores,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c),
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 5,
+                  title: {
+                    display: true,
+                    text: 'Health Score (1-5)'
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                }
+              }
+            }
+          });
+        }
+
+        document.addEventListener('DOMContentLoaded',function () {
+          setTimeout(function () {
+            am5.ready(function () {
+              createPieChart();
+              createHealthChart();
+            });
+          },100);
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize',function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            am5.ready(function () {
+              createPieChart();
+            });
+          },250);
+        });
+
+        window.addEventListener('beforeunload',function () {
+          disposeChart();
+        });
+      })();
+    </script>
+    <% } %>
+</body>
+
+</html>

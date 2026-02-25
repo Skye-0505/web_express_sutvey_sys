@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sleep Distribution Treemap - Health Survey</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- amCharts 5 -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/hierarchy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <!-- Custom CSS -->
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/chart-map.css' />
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-heartbeat me-2"></i>
+        <%= config.NAV_BRAND %>
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a href="/results" class="btn btn-outline-light me-2">
+          <i class="fas fa-chart-line me-2"></i>Back to Results
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="display-5 fw-bold text-primary">
+          <i class="fas fa-chart-tree me-3"></i>
+          Sleep Distribution Treemap
+        </h1>
+        <p class="lead text-muted">
+          Area size represents number of participants, color shows sleep quality
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="stats-card">
+          <h6>Total Participants</h6>
+          <h2>
+            <%= db.stats.totalParticipants.toLocaleString() %>
+          </h2>
+          <small>Across 18 districts</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <h6>Average Sleep</h6>
+          <h2>
+            <%= db.stats.avgSleepOverall %> hrs
+          </h2>
+          <small>Overall average</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);">
+          <h6>Best District</h6>
+          <h2>
+            <%= db.stats.bestDistrict %>
+          </h2>
+          <small>
+            <%= db.stats.bestHours %> hrs
+          </small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #f03e3e 100%);">
+          <h6>Worst District</h6>
+          <h2>
+            <%= db.stats.worstDistrict %>
+          </h2>
+          <small>
+            <%= db.stats.worstHours %> hrs
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-tree me-2 text-primary"></i>
+            Hong Kong 18 Districts Sleep Treemap
+          </h5>
+          <div>
+            <span class="badge bg-success me-2">Good Sleep (≥7.5h)</span>
+            <span class="badge bg-primary me-2">Average (6.5-7.4h)</span>
+            <span class="badge bg-danger">Poor Sleep (<6.5h)< /span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (db.treemapData && db.treemapData.length> 0) { %>
+          <div id="chartdiv"></div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <i class="fas fa-chart-tree fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No Data Available</h5>
+              <p class="text-muted">--</p>
+            </div>
+            <% } %>
+      </div>
+    </div>
+
+    <!-- Legend and Info -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="info-card">
+          <h6><i class="fas fa-info-circle me-2 text-primary"></i>How to read this chart</h6>
+          <ul class="mb-0">
+            <li><strong>Area size</strong> = Number of participants in that district</li>
+            <li><strong>Color</strong> = Average sleep quality</li>
+            <li><strong>Hover</strong> to see details</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="info-card">
+          <h6><i class="fas fa-lightbulb me-2 text-warning"></i>Sleep Quality Guide</h6>
+          <ul class="mb-0">
+            <li>
+              <%= config.SLEEP_HOURS['8+'] %>
+            </li>
+            <li>
+              <%= config.SLEEP_HOURS['6-8'] %>
+            </li>
+            <li>
+              <%= config.SLEEP_HOURS['<6'] %>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+      <a href="/results" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Results
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-light py-4 mt-5">
+    <div class="container text-center">
+      <p class="text-muted mb-0">
+        <i class="fas fa-heart text-danger me-2"></i>
+        <%= config.FOOTER.text %>
+      </p>
+    </div>
+  </footer>
+
+  <div id="treemap-data" data-treemap='<%- JSON.stringify(db.treemapData) %>' style="display: none;"></div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- amCharts Script -->
+  <% if (db.treemapData && db.treemapData.length> 0) { %>
+    <script>
+      (function () {
+        let treemapData = [];
+        try {
+          const dataElement = document.getElementById('treemap-data');
+          if (dataElement && dataElement.dataset.treemap) {
+            treemapData = JSON.parse(dataElement.dataset.treemap) || [];
+          }
+        } catch (e) {
+          console.error('treemap error:',e);
+        }
+
+        let currentRoot = null;
+
+        function disposeChart() {
+          if (currentRoot) {
+            try {
+              currentRoot.dispose();
+            } catch (e) {
+              console.warn('fail:',e);
+            }
+            currentRoot = null;
+          }
+        }
+
+        function createTreemap() {
+          disposeChart();
+
+          const chartDiv = document.getElementById('chartdiv');
+          if (!chartDiv || !treemapData || treemapData.length === 0) return;
+
+          const isMobile = window.innerWidth < 768;
+
+          var root = am5.Root.new("chartdiv");
+          currentRoot = root;
+
+          root.setThemes([am5themes_Animated.new(root)]);
+
+          var container = root.container.children.push(am5.Container.new(root,{
+            width: am5.percent(100),
+            height: am5.percent(100),
+            layout: root.verticalLayout
+          }));
+
+          var series = container.children.push(
+            am5hierarchy.Treemap.new(root,{
+              singleBranchOnly: false,
+              downDepth: 1,
+              initialDepth: 1,
+              valueField: "value",
+              categoryField: "name",
+              childDataField: "children",
+              nodePadding: isMobile ? 2 : 4,
+              tooltip: am5.Tooltip.new(root,{
+                labelText: "{name}\nParticipants: {value}\nSleep: {sleepHours}h"
+              })
+            })
+          );
+
+          if (series.mapPolygons) {
+            series.set("heatRules",[{
+              target: series.mapPolygons.template,
+              dataField: "sleepHours",
+              min: am5.color(0xff6b6b),
+              max: am5.color(0x51cf66),
+              key: "fill",
+              minValue: 6,
+              maxValue: 8
+            }]);
+
+            series.mapPolygons.template.setAll({
+              stroke: am5.color(0xffffff),
+              strokeWidth: 2,
+              toggleKey: "active",
+              cursorOverStyle: "pointer"
+            });
+          }
+
+          series.data.setAll(treemapData);
+
+          if (series.labels) {
+            series.labels.template.setAll({
+              fontSize: isMobile ? 10 : 12,
+              text: "{name}",
+              centerX: am5.p50,
+              centerY: am5.p50,
+              populateText: true,
+              fill: am5.color(0x333333)
+            });
+          }
+
+          series.appear(1000,100);
+          container.appear(1000,100);
+        }
+
+        document.addEventListener('DOMContentLoaded',function () {
+          am5.ready(function () {
+            createTreemap();
+          });
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize',function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            if (currentRoot) {
+              am5.ready(function () {
+                createTreemap();
+              });
+            }
+          },250);
+        });
+      })();
+    </script>
+    <% } %>
+</body>
+
+</html>

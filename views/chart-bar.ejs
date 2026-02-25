@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exercise & Health Chart - Health Survey</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- amCharts 5 -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <!-- Custom CSS -->
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/chart-bar.css' />
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-heartbeat me-2"></i>
+        <%= config.NAV_BRAND %>
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a href="/results" class="btn btn-outline-light me-2">
+          <i class="fas fa-chart-line me-2"></i>Back to Results
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="display-5 fw-bold text-primary">
+          <i class="fas fa-chart-bar me-3"></i>
+          Exercise & Health Analysis
+        </h1>
+        <p class="lead text-muted">
+          Average health score by exercise frequency across different age groups
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="stats-card">
+          <h6>Most Active Age</h6>
+          <h2>
+            <%= db.stats.mostActiveAge %>
+          </h2>
+          <small>Highest exercise frequency</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);">
+          <h6>Best Health Score</h6>
+          <h2>
+            <%= db.stats.bestHealthScore %>
+          </h2>
+          <small>Active group (5+/week)</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <h6>Sedentary Group</h6>
+          <h2>
+            <%= db.stats.sedentaryPercentage %>%
+          </h2>
+          <small>Exercise 0 times/week</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <h6>Total Participants</h6>
+          <h2>
+            <%= db.stats.totalParticipants.toLocaleString() %>
+          </h2>
+          <small>Across all age groups</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <div class="row align-items-center">
+          <div class="col">
+            <h5 class="mb-0">
+              <i class="fas fa-chart-line me-2 text-primary"></i>
+              Health Score by Exercise Frequency
+            </h5>
+          </div>
+          <div class="col-auto">
+            <div class="legend">
+              <span class="badge bg-secondary me-2">0/week</span>
+              <span class="badge bg-primary me-2">1-2/week</span>
+              <span class="badge bg-success me-2">3-4/week</span>
+              <span class="badge bg-warning me-2">5+/week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (db.formattedChartData && db.formattedChartData.length> 0) { %>
+          <div id="chartdiv"></div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No Data Available</h5>
+              <p class="text-muted">--</p>
+            </div>
+            <% } %>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card mt-4 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-table me-2 text-primary"></i>
+          Detailed Statistics
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Age Group</th>
+                <th>Exercise Frequency</th>
+                <th>Participants</th>
+                <th>Avg Health Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (db.formattedChartData && db.formattedChartData.length> 0) { %>
+                <% db.formattedChartData.forEach(age=> { %>
+                  <% db.exerciseLevels.forEach(level=> { %>
+                    <% if (age[level + '_count' ]> 0) { %>
+                      <tr>
+                        <td>
+                          <%= age.age %>
+                        </td>
+                        <td>
+                          <% if (level==='0' ) { %>Sedentary (0/week)
+                            <% } else if (level==='1-2' ) { %>Light (1-2/week)
+                              <% } else if (level==='3-4' ) { %>Moderate (3-4/week)
+                                <% } else { %>Active (5+/week)
+                                  <% } %>
+                        </td>
+                        <td>
+                          <%= age[level + '_count' ] %>
+                        </td>
+                        <td>
+                          <span
+                            class="badge bg-<%= age[level] >= 4 ? 'success' : (age[level] >= 3 ? 'warning' : 'danger') %>">
+                            <%= age[level] ? age[level].toFixed(1) : 'N/A' %>
+                          </span>
+                        </td>
+                      </tr>
+                      <% } %>
+                        <% }); %>
+                          <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                  <i class="fas fa-database me-2"></i>
+                                  No data available --
+                                </td>
+                              </tr>
+                              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+      <a href="/results" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Results
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-light py-4 mt-5">
+    <div class="container text-center">
+      <p class="text-muted mb-0">
+        <i class="fas fa-heart text-danger me-2"></i>
+        Data visualized from health survey responses
+      </p>
+    </div>
+  </footer>
+
+  <div id="chart-data" data-chart='<%- JSON.stringify(db.formattedChartData) %>'
+    data-levels='<%- JSON.stringify(db.exerciseLevels) %>' style="display: none;">
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- amCharts Script -->
+  <% if (db.formattedChartData && db.formattedChartData.length> 0) { %>
+    <script>
+      (function () {
+        const chartData = JSON.parse(document.getElementById('chart-data').dataset.chart);
+        const exerciseLevels = JSON.parse(document.getElementById('chart-data').dataset.levels);
+
+        let currentRoot = null;
+
+        function disposeChart() {
+          if (currentRoot) {
+            try {
+              currentRoot.dispose();
+            } catch (e) {
+              console.log('Dispose error:',e);
+            }
+            currentRoot = null;
+          }
+        }
+
+        function createChart() {
+          disposeChart();
+
+          const chartDiv = document.getElementById('chartdiv');
+          if (!chartDiv) return;
+
+          chartDiv.innerHTML = '';
+
+          const isMobile = window.innerWidth < 768;
+
+          var root = am5.Root.new("chartdiv");
+          currentRoot = root;
+
+          root.setThemes([
+            am5themes_Animated.new(root)
+          ]);
+
+          var chart = root.container.children.push(am5xy.XYChart.new(root,{
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX",
+            pinchZoomX: true,
+            paddingLeft: isMobile ? 5 : 0,
+            paddingRight: isMobile ? 5 : 1,
+            layout: root.verticalLayout
+          }));
+
+          var cursor = chart.set("cursor",am5xy.XYCursor.new(root,{}));
+          cursor.lineY.set("visible",false);
+
+          var xRenderer = am5xy.AxisRendererX.new(root,{
+            minGridDistance: isMobile ? 30 : 50,
+            cellStartLocation: 0.1,
+            cellEndLocation: 0.9
+          });
+
+          if (isMobile) {
+            xRenderer.labels.template.setAll({
+              rotation: -45,
+              fontSize: 10,
+              centerX: am5.p100,
+              centerY: am5.p50,
+              paddingRight: 10
+            });
+          }
+
+          var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root,{
+            categoryField: "age",
+            renderer: xRenderer,
+            tooltip: am5.Tooltip.new(root,{})
+          }));
+
+          xAxis.data.setAll(chartData);
+
+          var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root,{
+            min: 0,
+            max: 5,
+            renderer: am5xy.AxisRendererY.new(root,{}),
+            title: am5.Label.new(root,{
+              text: isMobile ? "Health Score" : "Average Health Score (1-5)",
+              fontSize: isMobile ? 10 : 12
+            })
+          }));
+
+          const colors = [
+            am5.color(0x6c757d), // gray for 0
+            am5.color(0x0d6efd), // blue for 1-2
+            am5.color(0x198754), // green for 3-4
+            am5.color(0xffc107)  // yellow for 5+
+          ];
+
+          const seriesNames = [
+            'Sedentary (0/week)',
+            'Light (1-2/week)',
+            'Moderate (3-4/week)',
+            'Active (5+/week)'
+          ];
+
+          exerciseLevels.forEach((level,index) => {
+            var series = chart.series.push(am5xy.ColumnSeries.new(root,{
+              name: seriesNames[index],
+              xAxis: xAxis,
+              yAxis: yAxis,
+              valueYField: level,
+              categoryXField: "age",
+              clustered: true,
+              fill: colors[index],
+              stroke: colors[index],
+              tooltip: am5.Tooltip.new(root,{
+                labelText: "[bold]{name}[/]\n{categoryX}: {valueY}",
+                pointerOrientation: "horizontal"
+              })
+            }));
+
+            series.columns.template.setAll({
+              width: am5.percent(isMobile ? 70 : 80),
+              cornerRadiusTL: 5,
+              cornerRadiusTR: 5,
+              strokeOpacity: 0
+            });
+
+            series.data.setAll(chartData);
+          });
+
+          var legend = chart.children.push(am5.Legend.new(root,{
+            centerX: am5.p50,
+            x: am5.p50,
+            layout: isMobile ? root.verticalLayout : root.horizontalLayout,
+            marginTop: isMobile ? 10 : 0
+          }));
+
+          if (isMobile) {
+            legend.labels.template.setAll({
+              fontSize: 10
+            });
+          }
+
+          legend.data.setAll(chart.series.values);
+
+          chart.appear(1000,100);
+        }
+
+        document.addEventListener('DOMContentLoaded',function () {
+          setTimeout(function () {
+            am5.ready(function () {
+              createChart();
+            });
+          },100);
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize',function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            am5.ready(function () {
+              createChart();
+            });
+          },250);
+        });
+
+        window.addEventListener('beforeunload',function () {
+          disposeChart();
+        });
+      })();
+    </script>
+    <% } %>
+</body>
+
+</html>

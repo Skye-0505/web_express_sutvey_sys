@@ -13,7 +13,6 @@ router.get('/', function(req, res, next) {
 
 router.post('/submit', async (req, res) => {
   try {
-        // 保存数据...
         const survey = new Survey({
             age_group: req.body.age_group,
             gender: req.body.gender,
@@ -30,32 +29,82 @@ router.post('/submit', async (req, res) => {
             submittedAt: new Date()
         });
 
-        // 保存到数据库
+        // save data
         const savedSurvey = await survey.save();
         console.log('✅ Survey saved with ID:', savedSurvey._id);
 
-        // ✅ 重定向到 GET 路由
+        // redirect to GET router
         res.redirect('/results');
     } catch (error) {
-      // 打印完整错误
-      console.error('❌ 完整错误:', error);
-      console.error('❌ 错误名称:', error.name);
-      console.error('❌ 错误消息:', error.message);
-      
-      // 如果是验证错误，打印具体字段
+      console.error('❌ error:', error);
+      console.error('❌ error.name:', error.name);
+      console.error('❌ error.message:', error.message);
       if (error.name === 'ValidationError') {
-          console.error('❌ 验证错误详情:', error.errors);
+          console.error('❌ error.errors:', error.errors);
       }
       
-      res.status(500).send('Error: ' + error.message);
+      res.status(500).send('Submission failed, please try again later.');
     }
 });
 
-router.get('/results', function(req, res, next) {
-  res.render('results', { 
-    title: 'test',
-    config: config
-  });
+router.get('/results', async (req, res) => {
+  try {
+    const db = {};
+    
+    db.totalCount = await Survey.countDocuments();
+    
+    const mostActive = await Survey.aggregate([
+      { $match: { exercise_frequency: { $in: ['3-4', '5+'] } } },
+      { $group: { _id: '$age_group', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 }
+    ]);
+    db.mostActiveAge = mostActive[0]?._id || '26-35';
+    
+    const dietDist = await Survey.aggregate([
+      { $group: { _id: '$diet_type', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 }
+    ]);
+    db.topDiet = dietDist[0]?._id || 'omnivore';
+    db.topDietPercentage = db.totalCount > 0 
+      ? Math.round((dietDist[0]?.count / db.totalCount) * 100) 
+      : 0;
+    
+    const sleepStats = await Survey.aggregate([
+      { $group: { _id: '$sleep_hours', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 }
+    ]);
+    
+    const sleepDisplay = {
+      '<6': 'Less than 6 hours',
+      '6-8': '6-8 hours',
+      '8+': 'More than 8 hours'
+    };
+    
+    db.mostCommonSleep = sleepStats[0]?._id 
+      ? sleepDisplay[sleepStats[0]._id] 
+      : '6-8 hours';
+    
+    res.render('results', { 
+      config: config,
+      db: db
+    });
+    
+  } catch (error) {
+    console.error('Error loading results:', error);
+    res.render('results', { 
+      config: config,
+      db: {
+        totalCount: '--',
+        mostActiveAge: '--',
+        topDiet: '--',
+        topDietPercentage: '--',
+        mostCommonSleep: '--'
+      }
+    });
+  }
 });
 
 module.exports = router;

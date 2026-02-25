@@ -1,3 +1,21 @@
-<h1><%= message %></h1>
-<h2><%= error.status %></h2>
-<pre><%= error.stack %></pre>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Error</title>
+  <meta charset="utf-8">
+</head>
+
+<body>
+  <h1>Error</h1>
+  <% if (message) { %>
+    <p>
+      <%= message %>
+    </p>
+    <% } %>
+      <% if (error) { %>
+        <pre><%= error.stack %></pre>
+        <% } %>
+</body>
+
+</html>

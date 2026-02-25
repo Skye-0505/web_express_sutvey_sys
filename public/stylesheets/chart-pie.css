@@ -1,0 +1,60 @@
+#chartdiv {
+  width: 100%;
+  height: 500px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.stats-card {
+  background: linear-gradient(135deg, #ff6b6b 0%, #f03e3e 100%);
+  color: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.diet-badge {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  #chartdiv {
+    height: 400px;
+    padding: 10px;
+  }
+
+  .stats-card {
+    padding: 15px;
+  }
+
+  .stats-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .stats-card h6 {
+    font-size: 0.9rem;
+  }
+
+  .stats-card small {
+    font-size: 0.8rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .diet-badge {
+    width: 14px;
+    height: 14px;
+  }
+
+  .progress {
+    height: 8px !important;
+  }
+}

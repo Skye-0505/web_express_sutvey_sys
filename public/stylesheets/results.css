@@ -7,6 +7,7 @@
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -23,7 +24,7 @@
 
 .chart-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 30px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
 .chart-card .card-img-top {
@@ -35,6 +36,10 @@
     justify-content: center;
     color: white;
     font-size: 3rem;
+}
+
+.card-text {
+    height: 96px;
 }
 
 .checkmark-circle {
@@ -54,6 +59,7 @@
     from {
         transform: scale(0);
     }
+
     to {
         transform: scale(1);
     }
